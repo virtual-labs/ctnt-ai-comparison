@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Lab in Operating Systems</title>
+  <style>
+    /* --- CSS Styles --- */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fafafa;
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+    }
+
+    #controls {
+      margin: 20px auto;
+      text-align: center;
+    }
+
+    #controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    #processes {
+      margin: 20px auto;
+      width: 80%;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    #log {
+      margin: 20px auto;
+      width: 80%;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+    }
+
+    #log ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    #log li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Virtual Lab in Operating Systems</h1>
+    <h2>Experiment: Processes and Context Switching</h2>
+  </header>
+
+  <!-- Control Panel: Buttons to drive the simulation -->
+  <div id="controls">
+    <button id="createBtn">Create Process</button>
+    <button id="runBtn">Run Process</button>
+    <button id="blockBtn">Block Process (Context Switch)</button>
+    <button id="unblockBtn">Unblock Process</button>
+    <button id="terminateBtn">Terminate Process</button>
+  </div>
+
+  <!-- Display the list of processes and their states -->
+  <section id="processes">
+    <h3>Process List</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Process ID</th>
+          <th>State</th>
+        </tr>
+      </thead>
+      <tbody id="processTableBody">
+        <!-- Process rows will be dynamically inserted here -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Log section to capture and display user actions -->
+  <section id="log">
+    <h3>Action Log</h3>
+    <ul id="logList"></ul>
+  </section>
+
+  <script>
+    // --- JavaScript Code ---
+
+    // Global process ID counter and process list
+    let processIdCounter = 1;
+    const processes = [];
+
+    // Process states: "New", "Ready", "Running", "Waiting", "Terminated"
+    // For this simulation, a process is first created in the "New" state.
+    // The user then chooses to run it, block it (simulate context switch), unblock it, or terminate it.
+
+    // Create a new process and add it to the list
+    function createProcess() {
+      const process = {
+        id: processIdCounter++,
+        state: "New"
+      };
+      processes.push(process);
+      logAction(`Created process ID ${process.id} in state "New".`);
+      updateProcessTable();
+    }
+
+    // Run a process: change state from "New" or "Ready" to "Running"
+    function runProcess() {
+      const process = processes.find(p => p.state === "New" || p.state === "Ready");
+      if (process) {
+        process.state = "Running";
+        logAction(`Process ID ${process.id} is now Running.`);
+        updateProcessTable();
+      } else {
+        logAction("No process available to run.");
+      }
+    }
+
+    // Block a process: simulate a context switch by changing a "Running" process to "Waiting"
+    function blockProcess() {
+      const process = processes.find(p => p.state === "Running");
+      if (process) {
+        process.state = "Waiting";
+        logAction(`Process ID ${process.id} is now Waiting (blocked).`);
+        updateProcessTable();
+      } else {
+        logAction("No running process to block.");
+      }
+    }
+
+    // Unblock a process: change a "Waiting" process to "Ready"
+    function unblockProcess() {
+      const process = processes.find(p => p.state === "Waiting");
+      if (process) {
+        process.state = "Ready";
+        logAction(`Process ID ${process.id} is now Ready (unblocked).`);
+        updateProcessTable();
+      } else {
+        logAction("No waiting process to unblock.");
+      }
+    }
+
+    // Terminate a process: change a "Running" process to "Terminated"
+    function terminateProcess() {
+      const process = processes.find(p => p.state === "Running");
+      if (process) {
+        process.state = "Terminated";
+        logAction(`Process ID ${process.id} has been Terminated.`);
+        updateProcessTable();
+      } else {
+        logAction("No running process to terminate.");
+      }
+    }
+
+    // Update the HTML table to reflect the current list of processes and their states
+    function updateProcessTable() {
+      const tbody = document.getElementById("processTableBody");
+      tbody.innerHTML = "";  // Clear previous rows
+
+      processes.forEach(process => {
+        const row = document.createElement("tr");
+
+        const idCell = document.createElement("td");
+        idCell.textContent = process.id;
+        row.appendChild(idCell);
+
+        const stateCell = document.createElement("td");
+        stateCell.textContent = process.state;
+        row.appendChild(stateCell);
+
+        tbody.appendChild(row);
+      });
+    }
+
+    // Log user actions along with a timestamp
+    function logAction(action) {
+      const logList = document.getElementById("logList");
+      const li = document.createElement("li");
+      const timestamp = new Date().toLocaleTimeString();
+      li.textContent = `[${timestamp}] ${action}`;
+      logList.appendChild(li);
+
+      // Auto-scroll to the bottom of the log
+      const logDiv = document.getElementById("log");
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // Attach event listeners to the control buttons
+    document.getElementById("createBtn").addEventListener("click", createProcess);
+    document.getElementById("runBtn").addEventListener("click", runProcess);
+    document.getElementById("blockBtn").addEventListener("click", blockProcess);
+    document.getElementById("unblockBtn").addEventListener("click", unblockProcess);
+    document.getElementById("terminateBtn").addEventListener("click", terminateProcess);
+  </script>
+</body>
+</html>

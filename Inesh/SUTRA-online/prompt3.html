@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab in Operating Systems</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        #simulation-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #process-view {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .process {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ready {
+            background-color: #d1ecf1; /* Light blue */
+            color: #0c5460;
+        }
+        .running {
+            background-color: #c3e6cb; /* Light green */
+            color: #155724;
+        }
+        .blocked {
+            background-color: #ffeeba; /* Light yellow */
+            color: #856404;
+        }
+        .terminated {
+            background-color: #f5c6cb; /* Light red */
+            color: #721c24;
+        }
+        #controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #controls button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #controls button:hover {
+            background-color: #0056b3;
+        }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="simulation-container">
+        <h1>Process Life Cycle and Context Switching</h1>
+        <div id="process-view"></div>
+        <div id="controls">
+            <button id="create-process">Create Process</button>
+        </div>
+        <div id="log"></div>
+    </div>
+    <script>

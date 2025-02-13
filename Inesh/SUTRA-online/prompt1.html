@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab in Operating Systems</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #simulation-container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #controls button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="simulation-container">
+        <h1>Process Life Cycle and Context Switching</h1>
+        <div id="process-view"></div>
+        <div id="controls">
+            <button id="create-process">Create Process</button>
+            <button id="context-switch">Context Switch</button>
+        </div>
+        <div id="log"></div>
+    </div>
+    <script>
+        let processes = [];
+        let log = [];
+        function createProcess() {
+            const processId = processes.length + 1;
+            const newProcess = { id: processId, state: 'Running' };
+            processes.push(newProcess);
+            updateView();
+            logAction(`Process ${processId} created.`);
+        }
+        function contextSwitch() {
+            if (processes.length > 0) {
+                const currentProcess = processes.shift();
+                currentProcess.state = 'Waiting';
+                processes.push(currentProcess);
+                updateView();
+                logAction(`Process ${currentProcess.id} switched to Waiting.`);
+            }
+        }
+        function updateView() {
+            const processView = document.getElementById('process-view');
+            processView.innerHTML = processes.map(p => `<div>Process ${p.id}: ${p.state}</div>`).join('');
+        }
+        function logAction(message) {
+            log.push(message);
+            document.getElementById('log').innerHTML = log.join('<br>');
+        }
+        document.getElementById('create-process').addEventListener('click', createProcess);
+        document.getElementById('context-switch').addEventListener('click', contextSwitch);
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+this looks very good and as expected, but i want you to add custom controls, 
+as in i should be individually able to control which process to block start, terminate etc, 
+right now if i have n processes running and i want to say block them,
+it blocks process1 process 2 process3 etc and similarly for all functions, 
+want to have individual control over the entire thing 

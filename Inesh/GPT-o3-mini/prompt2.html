@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Lab in Operating Systems</title>
+  <style>
+    /* --- CSS Styles --- */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fafafa;
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    #globalControls {
+      margin: 20px auto;
+      text-align: center;
+    }
+    #globalControls button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    #processes {
+      margin: 20px auto;
+      width: 90%;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    #log {
+      margin: 20px auto;
+      width: 90%;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+    }
+    #log ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9em;
+    }
+    #log li {
+      margin-bottom: 5px;
+    }
+    /* Optional: Style action buttons inside table */
+    .action-btn {
+      margin: 2px;
+      padding: 5px 8px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Virtual Lab in Operating Systems</h1>
+    <h2>Experiment: Processes and Context Switching</h2>
+  </header>
+
+  <!-- Global Control: Create new processes -->
+  <div id="globalControls">
+    <button id="createBtn">Create Process</button>
+  </div>
+
+  <!-- Process table with individual controls -->
+  <section id="processes">
+    <h3>Process List</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Process ID</th>
+          <th>State</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="processTableBody">
+        <!-- Process rows will be dynamically inserted here -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Log section to capture and display user actions -->
+  <section id="log">
+    <h3>Action Log</h3>
+    <ul id="logList"></ul>
+  </section>
+
+  <script>
+    // --- JavaScript Code ---
+
+    // Global process ID counter and process list
+    let processIdCounter = 1;
+    const processes = [];
+
+    // Possible process states: "New", "Ready", "Running", "Waiting", "Terminated"
+    // In this simulation:
+    // - A new process starts as "New".
+    // - Only processes in "New" or "Ready" can be set to "Running" (via Run).
+    // - Only a "Running" process can be blocked (set to "Waiting") or terminated.
+    // - Only a "Waiting" process can be unblocked (set to "Ready").
+
+    // Create a new process and add it to the list
+    function createProcess() {
+      const process = {
+        id: processIdCounter++,
+        state: "New"
+      };
+      processes.push(process);
+      logAction(`Created process ID ${process.id} in state "New".`);
+      updateProcessTable();
+    }
+
+    // --- Individual action functions ---
+
+    function runProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "New" || process.state === "Ready") {
+        process.state = "Running";
+        logAction(`Process ID ${process.id} changed to "Running".`);
+      } else {
+        logAction(`Cannot run Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessTable();
+    }
+
+    function blockProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Running") {
+        process.state = "Waiting";
+        logAction(`Process ID ${process.id} blocked and changed to "Waiting".`);
+      } else {
+        logAction(`Cannot block Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessTable();
+    }
+
+    function unblockProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Waiting") {
+        process.state = "Ready";
+        logAction(`Process ID ${process.id} unblocked and changed to "Ready".`);
+      } else {
+        logAction(`Cannot unblock Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessTable();
+    }
+
+    function terminateProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Running") {
+        process.state = "Terminated";
+        logAction(`Process ID ${process.id} has been terminated.`);
+      } else {
+        logAction(`Cannot terminate Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessTable();
+    }
+
+    // Update the HTML table to reflect the current list of processes and their states.
+    // Also add individual control buttons for each process.
+    function updateProcessTable() {
+      const tbody = document.getElementById("processTableBody");
+      tbody.innerHTML = "";  // Clear previous rows
+
+      processes.forEach(process => {
+        const row = document.createElement("tr");
+
+        // Process ID cell
+        const idCell = document.createElement("td");
+        idCell.textContent = process.id;
+        row.appendChild(idCell);
+
+        // Process State cell
+        const stateCell = document.createElement("td");
+        stateCell.textContent = process.state;
+        row.appendChild(stateCell);
+
+        // Actions cell: Create buttons for each available action
+        const actionCell = document.createElement("td");
+
+        // Create Run button: allowed if process is "New" or "Ready"
+        const runBtn = document.createElement("button");
+        runBtn.textContent = "Run";
+        runBtn.className = "action-btn";
+        runBtn.onclick = () => runProcessById(process.id);
+        if (!(process.state === "New" || process.state === "Ready")) {
+          runBtn.disabled = true;
+        }
+        actionCell.appendChild(runBtn);
+
+        // Create Block button: allowed if process is "Running"
+        const blockBtn = document.createElement("button");
+        blockBtn.textContent = "Block";
+        blockBtn.className = "action-btn";
+        blockBtn.onclick = () => blockProcessById(process.id);
+        if (process.state !== "Running") {
+          blockBtn.disabled = true;
+        }
+        actionCell.appendChild(blockBtn);
+
+        // Create Unblock button: allowed if process is "Waiting"
+        const unblockBtn = document.createElement("button");
+        unblockBtn.textContent = "Unblock";
+        unblockBtn.className = "action-btn";
+        unblockBtn.onclick = () => unblockProcessById(process.id);
+        if (process.state !== "Waiting") {
+          unblockBtn.disabled = true;
+        }
+        actionCell.appendChild(unblockBtn);
+
+        // Create Terminate button: allowed if process is "Running"
+        const terminateBtn = document.createElement("button");
+        terminateBtn.textContent = "Terminate";
+        terminateBtn.className = "action-btn";
+        terminateBtn.onclick = () => terminateProcessById(process.id);
+        if (process.state !== "Running") {
+          terminateBtn.disabled = true;
+        }
+        actionCell.appendChild(terminateBtn);
+
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+      });
+    }
+
+    // Log user actions along with a timestamp
+    function logAction(action) {
+      const logList = document.getElementById("logList");
+      const li = document.createElement("li");
+      const timestamp = new Date().toLocaleTimeString();
+      li.textContent = `[${timestamp}] ${action}`;
+      logList.appendChild(li);
+
+      // Auto-scroll to the bottom of the log
+      const logDiv = document.getElementById("log");
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // Attach event listener to the global Create Process button
+    document.getElementById("createBtn").addEventListener("click", createProcess);
+  </script>
+</body>
+</html>

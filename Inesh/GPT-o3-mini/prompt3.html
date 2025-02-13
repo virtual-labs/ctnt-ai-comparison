@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Lab in Operating Systems</title>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #2a2a72, #4646a6);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    .header h2 {
+      margin: 5px 0 0;
+      font-size: 1.2em;
+      font-weight: 300;
+    }
+    /* Main Container */
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+    .process-section,
+    .log-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .process-section {
+      flex: 2;
+      min-width: 300px;
+    }
+    .log-section {
+      flex: 1;
+      min-width: 250px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    /* Global Button */
+    .create-btn {
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .create-btn:hover {
+      background-color: #45a049;
+    }
+    /* Process Cards */
+    .process-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .process-card {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      width: 280px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .process-card h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+    .process-state {
+      font-weight: bold;
+      margin: 10px 0;
+      color: #555;
+    }
+    /* Action Buttons on Cards */
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 0.9em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .action-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .btn-run {
+      background-color: #2196F3;
+      color: #fff;
+    }
+    .btn-run:hover:not(:disabled) {
+      background-color: #1976D2;
+    }
+    .btn-block {
+      background-color: #FF9800;
+      color: #fff;
+    }
+    .btn-block:hover:not(:disabled) {
+      background-color: #F57C00;
+    }
+    .btn-unblock {
+      background-color: #9C27B0;
+      color: #fff;
+    }
+    .btn-unblock:hover:not(:disabled) {
+      background-color: #7B1FA2;
+    }
+    .btn-terminate {
+      background-color: #f44336;
+      color: #fff;
+    }
+    .btn-terminate:hover:not(:disabled) {
+      background-color: #d32f2f;
+    }
+    /* Action Log Styles */
+    .log-section h3 {
+      margin-top: 0;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+    .log-container {
+      margin-top: 10px;
+      font-size: 0.9em;
+      list-style: none;
+      padding-left: 0;
+    }
+    .log-container li {
+      margin-bottom: 8px;
+      border-bottom: 1px dashed #eee;
+      padding-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>Virtual Lab in Operating Systems</h1>
+    <h2>Experiment: Processes and Context Switching</h2>
+  </div>
+  <!-- Main Content Container -->
+  <div class="container">
+    <!-- Process Section -->
+    <div class="process-section">
+      <button class="create-btn" id="createBtn">Create Process</button>
+      <div class="process-cards" id="processCards">
+        <!-- Process cards will be dynamically generated here -->
+      </div>
+    </div>
+    <!-- Log Section -->
+    <div class="log-section">
+      <h3>Action Log</h3>
+      <ul class="log-container" id="logList">
+        <!-- Log entries will appear here -->
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+    // --- JavaScript Code ---
+    let processIdCounter = 1;
+    const processes = [];
+
+    // Create a new process
+    function createProcess() {
+      const process = {
+        id: processIdCounter++,
+        state: "New"
+      };
+      processes.push(process);
+      logAction(`Created process ID ${process.id} in state "New".`);
+      updateProcessCards();
+    }
+
+    // Individual Action Functions
+    function runProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "New" || process.state === "Ready") {
+        process.state = "Running";
+        logAction(`Process ID ${process.id} is now Running.`);
+      } else {
+        logAction(`Cannot run Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessCards();
+    }
+
+    function blockProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Running") {
+        process.state = "Waiting";
+        logAction(`Process ID ${process.id} blocked and set to "Waiting".`);
+      } else {
+        logAction(`Cannot block Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessCards();
+    }
+
+    function unblockProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Waiting") {
+        process.state = "Ready";
+        logAction(`Process ID ${process.id} unblocked and set to "Ready".`);
+      } else {
+        logAction(`Cannot unblock Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessCards();
+    }
+
+    function terminateProcessById(id) {
+      const process = processes.find(p => p.id === id);
+      if (!process) return;
+      if (process.state === "Running") {
+        process.state = "Terminated";
+        logAction(`Process ID ${process.id} has been Terminated.`);
+      } else {
+        logAction(`Cannot terminate Process ID ${process.id} from state "${process.state}".`);
+      }
+      updateProcessCards();
+    }
+
+    // Update the Process Cards UI
+    function updateProcessCards() {
+      const processCards = document.getElementById("processCards");
+      processCards.innerHTML = "";
+      processes.forEach(process => {
+        const card = document.createElement("div");
+        card.className = "process-card";
+        
+        // Process Title
+        const title = document.createElement("h3");
+        title.textContent = `Process ID ${process.id}`;
+        card.appendChild(title);
+        
+        // Process State Display
+        const stateDisplay = document.createElement("div");
+        stateDisplay.className = "process-state";
+        stateDisplay.textContent = `State: ${process.state}`;
+        card.appendChild(stateDisplay);
+        
+        // Action Buttons Container
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "actions";
+
+        // Run Button (enabled if New or Ready)
+        const runBtn = document.createElement("button");
+        runBtn.textContent = "Run";
+        runBtn.className = "action-btn btn-run";
+        runBtn.onclick = () => runProcessById(process.id);
+        if (!(process.state === "New" || process.state === "Ready")) {
+          runBtn.disabled = true;
+        }
+        actionsDiv.appendChild(runBtn);
+
+        // Block Button (enabled if Running)
+        const blockBtn = document.createElement("button");
+        blockBtn.textContent = "Block";
+        blockBtn.className = "action-btn btn-block";
+        blockBtn.onclick = () => blockProcessById(process.id);
+        if (process.state !== "Running") {
+          blockBtn.disabled = true;
+        }
+        actionsDiv.appendChild(blockBtn);
+
+        // Unblock Button (enabled if Waiting)
+        const unblockBtn = document.createElement("button");
+        unblockBtn.textContent = "Unblock";
+        unblockBtn.className = "action-btn btn-unblock";
+        unblockBtn.onclick = () => unblockProcessById(process.id);
+        if (process.state !== "Waiting") {
+          unblockBtn.disabled = true;
+        }
+        actionsDiv.appendChild(unblockBtn);
+
+        // Terminate Button (enabled if Running)
+        const terminateBtn = document.createElement("button");
+        terminateBtn.textContent = "Terminate";
+        terminateBtn.className = "action-btn btn-terminate";
+        terminateBtn.onclick = () => terminateProcessById(process.id);
+        if (process.state !== "Running") {
+          terminateBtn.disabled = true;
+        }
+        actionsDiv.appendChild(terminateBtn);
+
+        // Append actions to card and card to container
+        card.appendChild(actionsDiv);
+        processCards.appendChild(card);
+      });
+    }
+
+    // Log Actions with a Timestamp
+    function logAction(action) {
+      const logList = document.getElementById("logList");
+      const li = document.createElement("li");
+      const timestamp = new Date().toLocaleTimeString();
+      li.textContent = `[${timestamp}] ${action}`;
+      logList.appendChild(li);
+      // Auto-scroll to the bottom
+      logList.scrollTop = logList.scrollHeight;
+    }
+
+    // Event Listener for Global "Create Process" Button
+    document.getElementById("createBtn").addEventListener("click", createProcess);
+  </script>
+</body>
+</html>

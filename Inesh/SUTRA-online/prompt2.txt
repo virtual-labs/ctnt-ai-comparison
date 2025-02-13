@@ -1,0 +1,5 @@
+he css and logic, both are not correct now, first improve the logic, the logic should be the when a new process is created, 
+then it is by default in the ready state, then the user has the choice to run it or let it remain in the ready state, 
+and once it is running, then the user has the choice either to block it, or terminate it, once terminated, it cannot be run again, 
+if blocked, then it can only be unblocked from there, and when unblocked, it comes again ready state where the user can again decide to run it, 
+and create an action log for it where it shows which process is in which state etc and improve the overall css for all of this and give the entire code in a single file.
