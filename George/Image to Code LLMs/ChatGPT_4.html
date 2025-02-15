@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mean and Covariance Simulator</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e2f;
+      color: #e0e0e0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 1200px;
+      gap: 1rem;
+    }
+    .visualization {
+      flex: 2;
+      min-width: 600px;
+      background: #2e2e40;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+    .controls {
+      flex: 1;
+      min-width: 300px;
+      background: #2e2e40;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .control-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      background: #3e3e50;
+      color: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      outline: none;
+    }
+    button:hover {
+      background: #5e5e70;
+    }
+    svg {
+      width: 100%;
+      height: 500px;
+      cursor: move;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 0.5rem;
+      text-align: center;
+      border: 1px solid #555;
+    }
+    th {
+      background: #3e3e50;
+    }
+  </style>
+</head>
+<body>
+<h1>Mean and Covariance Simulator</h1>
+<div class="container">
+  <div class="visualization" id="chart"></div>
+  <div class="controls">
+    <h3>Generate Points</h3>
+    <!-- Class 1 controls -->
+    <div class="control-group">
+      <label for="class1-count">Class 1 Count</label>
+      <input type="number" id="class1-count" value="100">
+    </div>
+    <div class="control-group">
+      <label for="class1-mean">Class 1 Mean (x, y)</label>
+      <input type="text" id="class1-mean" value="0, 0">
+    </div>
+    <div class="control-group">
+      <label for="class1-covariance">Class 1 Covariance (xx, xy, yx, yy)</label>
+      <input type="text" id="class1-covariance" value="1, 0, 0, 1">
+    </div>
+    <div class="control-group">
+      <button id="generate-class1">Generate Class 1</button>
+    </div>
+    <!-- Class 2 controls -->
+    <div class="control-group">
+      <label for="class2-count">Class 2 Count</label>
+      <input type="number" id="class2-count" value="100">
+    </div>
+    <div class="control-group">
+      <label for="class2-mean">Class 2 Mean (x, y)</label>
+      <input type="text" id="class2-mean" value="2, 2">
+    </div>
+    <div class="control-group">
+      <label for="class2-covariance">Class 2 Covariance (xx, xy, yx, yy)</label>
+      <input type="text" id="class2-covariance" value="1, 0, 0, 1">
+    </div>
+    <div class="control-group">
+      <button id="generate-class2">Generate Class 2</button>
+    </div>
+    <hr>
+    <h3>Custom Points Mode</h3>
+    <div class="control-group">
+      <label for="custom-mode">Add custom points to:</label>
+      <select id="custom-mode">
+        <option value="none">None</option>
+        <option value="class1">Class 1</option>
+        <option value="class2">Class 2</option>
+      </select>
+      <small>When a class is selected, click on the chart to add custom points continuously.</small>
+    </div>
+    <hr>
+    <h3>Axes Controls</h3>
+    <div class="control-group">
+      <button id="auto-rescale">Auto Rescale Axes</button>
+      <small>This will adjust the axes to include all points.</small>
+    </div>
+    <hr>
+    <h3>Calculated Statistics</h3>
+    <table id="stats-table">
+      <thead>
+      <tr>
+        <th>Class</th>
+        <th>Mean (x, y)</th>
+        <th>Variance (x, y)</th>
+        <th>Covariance</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Class 1</td>
+        <td id="stats-class1-mean">-</td>
+        <td id="stats-class1-var">-</td>
+        <td id="stats-class1-cov">-</td>
+      </tr>
+      <tr>
+        <td>Class 2</td>
+        <td id="stats-class2-mean">-</td>
+        <td id="stats-class2-var">-</td>
+        <td id="stats-class2-cov">-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Global storage for class data
+  let class1Data = [];
+  let class2Data = [];
+
+  // Set up SVG and dimensions
+  const svg = d3.select("#chart").append("svg");
+  const width = svg.node().getBoundingClientRect().width;
+  const height = svg.node().getBoundingClientRect().height;
+  const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+
+  // Create a container group for all chart elements (axes and points)
+  const container = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  // Create separate groups for axes and points.
+  const gAxes = container.append("g").attr("class", "axes");
+  const gPoints = container.append("g").attr("class", "points");
+
+  // Create groups for each type of point.
+  const gClass1 = gPoints.append("g").attr("class", "class1");
+  const gClass2 = gPoints.append("g").attr("class", "class2");
+
+  // Define the scales with initial domains.
+  const xScale = d3.scaleLinear().domain([-5, 5]).range([0, chartWidth]);
+  const yScale = d3.scaleLinear().domain([-5, 5]).range([chartHeight, 0]);
+
+  // Render initial axes
+  const xAxis = d3.axisBottom(xScale);
+  const yAxis = d3.axisLeft(yScale);
+
+  const gXAxis = gAxes.append("g")
+          .attr("class", "x-axis")
+          .attr("transform", `translate(0, ${chartHeight})`)
+          .call(xAxis);
+  const gYAxis = gAxes.append("g")
+          .attr("class", "y-axis")
+          .call(yAxis);
+
+  // Add a transparent rect for capturing click events (for custom point addition)
+  const backgroundRect = gPoints.append("rect")
+          .attr("width", chartWidth)
+          .attr("height", chartHeight)
+          .attr("fill", "none")
+          .style("pointer-events", "all");
+
+  // Global variable to store current zoom transform (initially identity)
+  let transform = d3.zoomIdentity;
+
+  // Add zoom behavior
+  const zoom = d3.zoom()
+          .scaleExtent([0.5, 20])
+          .extent([[0, 0], [chartWidth, chartHeight]])
+          .on("zoom", zoomed);
+
+  svg.call(zoom);
+
+  function zoomed(event) {
+    transform = event.transform;
+    // Create new scales based on zoom
+    const newXScale = transform.rescaleX(xScale);
+    const newYScale = transform.rescaleY(yScale);
+    // Update axes with new scales
+    gXAxis.call(xAxis.scale(newXScale));
+    gYAxis.call(yAxis.scale(newYScale));
+    // Update positions of all circles
+    gPoints.selectAll("circle")
+            .attr("cx", d => newXScale(d.x))
+            .attr("cy", d => newYScale(d.y));
+    // Ensure the background covers the chart area
+    backgroundRect.attr("width", chartWidth).attr("height", chartHeight);
+  }
+
+  // Utility function to parse comma-separated values
+  function parseCSV(str, count) {
+    return str.split(",")
+            .map(s => Number(s.trim()))
+            .filter((d, i) => i < count);
+  }
+
+  // Function to generate Gaussian distributed data.
+  // Only uses the diagonal covariance values for standard deviation.
+  function generateGaussian(mean, covariance, count) {
+    const data = [];
+    const meanVector = parseCSV(mean, 2);
+    const covValues = parseCSV(covariance, 4);
+    const stdX = Math.sqrt(Math.abs(covValues[0]));
+    const stdY = Math.sqrt(Math.abs(covValues[3]));
+    const randX = d3.randomNormal(meanVector[0], stdX);
+    const randY = d3.randomNormal(meanVector[1], stdY);
+    for (let i = 0; i < count; i++) {
+      data.push({ x: randX(), y: randY() });
+    }
+    return data;
+  }
+
+  // Render points for a given group using the current zoom transform.
+  // The selector 'group' should be one of gClass1 or gClass2.
+  function renderPoints(data, group) {
+    group.selectAll("circle")
+            .data(data)
+            .join(
+                    enter => enter.append("circle")
+                            .attr("cx", d => transform.rescaleX(xScale)(d.x))
+                            .attr("cy", d => transform.rescaleY(yScale)(d.y))
+                            .attr("r", 3)
+                            .attr("stroke", "#fff")
+                            .attr("stroke-width", 0.5)
+                            .attr("fill", group === gClass1 ? "red" : "blue"),
+                    update => update
+                            .attr("cx", d => transform.rescaleX(xScale)(d.x))
+                            .attr("cy", d => transform.rescaleY(yScale)(d.y))
+            );
+  }
+
+  // Recalculate statistics (mean, variance, covariance) from an array of points.
+  function calculateStats(data) {
+    if (data.length === 0) return { mean: ["-", "-"], variance: ["-", "-"], covariance: "-" };
+    let sumX = 0, sumY = 0;
+    data.forEach(d => { sumX += d.x; sumY += d.y; });
+    const meanX = sumX / data.length;
+    const meanY = sumY / data.length;
+    let varX = 0, varY = 0, covXY = 0;
+    data.forEach(d => {
+      varX += (d.x - meanX) ** 2;
+      varY += (d.y - meanY) ** 2;
+      covXY += (d.x - meanX) * (d.y - meanY);
+    });
+    if(data.length > 1){
+      varX /= (data.length - 1);
+      varY /= (data.length - 1);
+      covXY /= (data.length - 1);
+    }
+    return {
+      mean: [meanX.toFixed(2), meanY.toFixed(2)],
+      variance: [varX.toFixed(2), varY.toFixed(2)],
+      covariance: covXY.toFixed(2)
+    };
+  }
+
+  // Update the stats table for each class.
+  function updateStatsTable() {
+    const stats1 = calculateStats(class1Data);
+    const stats2 = calculateStats(class2Data);
+    document.getElementById("stats-class1-mean").textContent = `(${stats1.mean.join(", ")})`;
+    document.getElementById("stats-class1-var").textContent = `(${stats1.variance.join(", ")})`;
+    document.getElementById("stats-class1-cov").textContent = stats1.covariance;
+    document.getElementById("stats-class2-mean").textContent = `(${stats2.mean.join(", ")})`;
+    document.getElementById("stats-class2-var").textContent = `(${stats2.variance.join(", ")})`;
+    document.getElementById("stats-class2-cov").textContent = stats2.covariance;
+  }
+
+  // Auto-rescale the axes to include all points.
+  function autoRescaleAxes() {
+    const allData = class1Data.concat(class2Data);
+    if (allData.length === 0) return;
+    let minX = d3.min(allData, d => d.x);
+    let maxX = d3.max(allData, d => d.x);
+    let minY = d3.min(allData, d => d.y);
+    let maxY = d3.max(allData, d => d.y);
+    // Add 10% padding (or 1 unit if range is zero)
+    let padX = (maxX - minX) * 0.1 || 1;
+    let padY = (maxY - minY) * 0.1 || 1;
+    xScale.domain([minX - padX, maxX + padX]);
+    yScale.domain([minY - padY, maxY + padY]);
+
+    // Reset the zoom transform
+    transform = d3.zoomIdentity;
+    svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+
+    // Update axes with new scales
+    gXAxis.transition().duration(750).call(xAxis.scale(xScale));
+    gYAxis.transition().duration(750).call(yAxis.scale(yScale));
+
+    // Re-render points with updated scales
+    renderPoints(class1Data, gClass1);
+    renderPoints(class2Data, gClass2);
+  }
+
+  // Event listeners for generating class data
+  document.getElementById("generate-class1").addEventListener("click", () => {
+    const count = +document.getElementById("class1-count").value;
+    const mean = document.getElementById("class1-mean").value;
+    const covariance = document.getElementById("class1-covariance").value;
+    class1Data = generateGaussian(mean, covariance, count);
+    renderPoints(class1Data, gClass1);
+    updateStatsTable();
+  });
+
+  document.getElementById("generate-class2").addEventListener("click", () => {
+    const count = +document.getElementById("class2-count").value;
+    const mean = document.getElementById("class2-mean").value;
+    const covariance = document.getElementById("class2-covariance").value;
+    class2Data = generateGaussian(mean, covariance, count);
+    renderPoints(class2Data, gClass2);
+    updateStatsTable();
+  });
+
+  // Event listener for the Auto Rescale Axes button.
+  document.getElementById("auto-rescale").addEventListener("click", () => {
+    autoRescaleAxes();
+  });
+
+  // Handle click events for adding custom points based on the selected mode.
+  backgroundRect.on("click", function (event) {
+    const mode = document.getElementById("custom-mode").value;
+    if (mode === "none") return;
+    // Get mouse position relative to the container and invert zoom transform
+    const [mx, my] = d3.pointer(event);
+    const tx = transform.rescaleX(xScale).invert(mx);
+    const ty = transform.rescaleY(yScale).invert(my);
+    const newPoint = { x: tx, y: ty };
+    if (mode === "class1") {
+      class1Data.push(newPoint);
+      renderPoints(class1Data, gClass1);
+    } else if (mode === "class2") {
+      class2Data.push(newPoint);
+      renderPoints(class2Data, gClass2);
+    }
+    updateStatsTable();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Recognition Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --accent-blue: #4a9eff;
+            --accent-red: #ff4a4a;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-blue);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        input, button {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        button {
+            background: var(--accent-blue);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .class-1 {
+            color: var(--accent-red);
+        }
+
+        .class-2 {
+            color: var(--accent-blue);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .results-grid span {
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Pattern Recognition Simulator</h1>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container">
+            <div id="plot"></div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <h2>Dataset Controls</h2>
+                <div class="input-group">
+                    <input type="number" id="class1-count" value="100" min="1" max="1000">
+                    <input type="number" id="class2-count" value="100" min="1" max="1000">
+                </div>
+                <button onclick="generateData()">Generate Data</button>
+            </div>
+
+            <div class="control-group">
+                <h2>Parameters</h2>
+                <div class="input-group">
+                    <input type="number" id="class1-mean" value="0" step="0.1">
+                    <input type="number" id="class2-mean" value="2" step="0.1">
+                </div>
+                <div class="input-group">
+                    <input type="number" id="class1-covar" value="1" step="0.1">
+                    <input type="number" id="class2-covar" value="1" step="0.1">
+                </div>
+                <button onclick="updateParameters()">Update</button>
+            </div>
+
+            <div class="control-group">
+                <h2>Results</h2>
+                <div class="results-grid">
+                    <span></span>
+                    <span class="class-1">Class 1</span>
+                    <span class="class-2">Class 2</span>
+
+                    <span>Mean:</span>
+                    <span id="mean1-result">0.00</span>
+                    <span id="mean2-result">0.00</span>
+
+                    <span>Covar:</span>
+                    <span id="covar1-result">0.00</span>
+                    <span id="covar2-result">0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize variables
+    let width = 800;
+    let height = 600;
+    let margin = {top: 20, right: 20, bottom: 30, left: 40};
+    let class1Data = [];
+    let class2Data = [];
+
+    // Create SVG
+    const svg = d3.select("#plot")
+        .append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Scales
+    let x = d3.scaleLinear().range([0, width]);
+    let y = d3.scaleLinear().range([height, 0]);
+
+    // Add axes
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0,${height})`);
+
+    svg.append("g")
+        .attr("class", "y-axis");
+
+    function generateGaussianData(mean, covariance, count) {
+        const data = [];
+        for (let i = 0; i < count; i++) {
+            // Box-Muller transform for normal distribution
+            const u1 = Math.random();
+            const u2 = Math.random();
+            const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+
+            const x = mean + Math.sqrt(covariance) * z1;
+            const y = mean + Math.sqrt(covariance) * z2;
+
+            data.push({x, y});
+        }
+        return data;
+    }
+
+    function updateChart() {
+        // Update scales
+        const allData = [...class1Data, ...class2Data];
+        x.domain([
+            d3.min(allData, d => d.x) - 1,
+            d3.max(allData, d => d.x) + 1
+        ]);
+        y.domain([
+            d3.min(allData, d => d.y) - 1,
+            d3.max(allData, d => d.y) + 1
+        ]);
+
+        // Update axes
+        svg.select(".x-axis").call(d3.axisBottom(x));
+        svg.select(".y-axis").call(d3.axisLeft(y));
+
+        // Update points
+        const updateClass1 = svg.selectAll(".class1")
+            .data(class1Data);
+
+        updateClass1.enter()
+            .append("circle")
+            .attr("class", "class1")
+            .merge(updateClass1)
+            .attr("cx", d => x(d.x))
+            .attr("cy", d => y(d.y))
+            .attr("r", 3)
+            .style("fill", "var(--accent-red)");
+
+        updateClass1.exit().remove();
+
+        const updateClass2 = svg.selectAll(".class2")
+            .data(class2Data);
+
+        updateClass2.enter()
+            .append("circle")
+            .attr("class", "class2")
+            .merge(updateClass2)
+            .attr("cx", d => x(d.x))
+            .attr("cy", d => y(d.y))
+            .attr("r", 3)
+            .style("fill", "var(--accent-blue)");
+
+        updateClass2.exit().remove();
+
+        // Calculate and update statistics
+        const mean1 = calculateMean(class1Data);
+        const mean2 = calculateMean(class2Data);
+        const covar1 = calculateCovariance(class1Data);
+        const covar2 = calculateCovariance(class2Data);
+
+        document.getElementById("mean1-result").textContent = mean1.toFixed(2);
+        document.getElementById("mean2-result").textContent = mean2.toFixed(2);
+        document.getElementById("covar1-result").textContent = covar1.toFixed(2);
+        document.getElementById("covar2-result").textContent = covar2.toFixed(2);
+    }
+
+    function calculateMean(data) {
+        return d3.mean(data, d => (d.x + d.y) / 2);
+    }
+
+    function calculateCovariance(data) {
+        const meanX = d3.mean(data, d => d.x);
+        const meanY = d3.mean(data, d => d.y);
+        const n = data.length;
+
+        return data.reduce((acc, d) => {
+            return acc + ((d.x - meanX) * (d.y - meanY)) / n;
+        }, 0);
+    }
+
+    function generateData() {
+        const count1 = parseInt(document.getElementById("class1-count").value);
+        const count2 = parseInt(document.getElementById("class2-count").value);
+        const mean1 = parseFloat(document.getElementById("class1-mean").value);
+        const mean2 = parseFloat(document.getElementById("class2-mean").value);
+        const covar1 = parseFloat(document.getElementById("class1-covar").value);
+        const covar2 = parseFloat(document.getElementById("class2-covar").value);
+
+        class1Data = generateGaussianData(mean1, covar1, count1);
+        class2Data = generateGaussianData(mean2, covar2, count2);
+
+        updateChart();
+    }
+
+    function updateParameters() {
+        generateData();
+    }
+
+    // Initial data generation
+    generateData();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const container = document.querySelector('.chart-container');
+        width = container.clientWidth - margin.left - margin.right;
+        height = Math.min(width * 0.75, 600);
+
+        d3.select("#plot svg")
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`);
+
+        updateChart();
+    });
+</script>
+</body>
+</html>

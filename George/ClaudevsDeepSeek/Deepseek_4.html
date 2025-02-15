@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Plant Anatomy Explorer</title>
+    <style>
+        :root {
+            --primary: #2E8B57;
+            --secondary: #76c893;
+            --background: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background);
+            color: #333;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            margin: 2rem auto;
+            border-radius: 20px;
+            max-width: 1000px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        h1, h2 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        #plant-diagram {
+            position: relative;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .plant-part {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .plant-part:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 8px rgba(46,139,87,0.2));
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            max-width: 400px;
+            z-index: 1000;
+        }
+
+        .quiz-container {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .quiz-question {
+            display: none;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(118,200,147,0.3);
+        }
+
+        #growth-simulation {
+            height: 200px;
+            position: relative;
+            margin: 2rem 0;
+            background: #f0faf4;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .growth-stage {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 1s ease;
+            opacity: 0;
+        }
+
+        .visible {
+            opacity: 1;
+        }
+
+        form {
+            display: grid;
+            gap: 1rem;
+            max-width: 500px;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .correct { background: #d4edda !important; }
+        .incorrect { background: #f8d7da !important; }
+    </style>
+</head>
+<body>
+<div class="section">
+    <h1>🌿 Interactive Plant Anatomy</h1>
+
+    <!-- Plant Anatomy Diagram -->
+    <div class="section">
+        <h2>Interactive Plant Diagram</h2>
+        <div id="plant-diagram">
+            <svg width="400" height="500" viewBox="0 0 400 500">
+                <!-- Roots -->
+                <path class="plant-part" d="M180 400 L220 400 L210 350 L190 350 Z" fill="#8B4513" onclick="showInfo('roots')"/>
+                <!-- Stem -->
+                <rect class="plant-part" x="195" y="200" width="10" height="200" fill="#228B22" onclick="showInfo('stem')"/>
+                <!-- Leaves -->
+                <path class="plant-part" d="M200 150 Q150 100 200 50 Q250 100 200 150" fill="#2E8B57" onclick="showInfo('leaves')"/>
+            </svg>
+        </div>
+        <div id="info-modal" class="modal">
+            <h3 id="modal-title"></h3>
+            <p id="modal-content"></p>
+            <button onclick="hideModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Growth Simulation -->
+    <div class="section">
+        <h2>🌱 Growth Simulation</h2>
+        <p>Watch how a plant grows from seedling to mature plant:</p>
+        <div id="growth-simulation">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyZTJiMzkiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1zcHJvdXQiPjxwYXRoIGQ9Ik0xNyAySDdMMyA3aDE4bC00LTVaIi8+PHBhdGggZD0iTTMgN3YxM2E0IDQgMCAwIDAgNCA0aDEwYTQgNCAwIDAgMCA0LTRWNyIvPjxwYXRoIGQ9Ik04IDdWNUMyLjUgNSA1IDIuNSA1IDUiLz48cGF0aCBkPSJNOSA3VjZjMyAxID0mI3gyQTsgMCAyLjUtMi41IDIuNS0yLjUiLz48L3N2Zz4=" class="growth-stage" style="height: 40px">
+            <div class="growth-stage" style="height: 100px; width: 8px; background: #228B22"></div>
+            <div class="growth-stage" style="height: 180px; width: 8px; background: #228B22"></div>
+        </div>
+        <button onclick="startGrowth()">Start Growth Simulation</button>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="section">
+        <h2>📝 Plant Anatomy Quiz</h2>
+        <div class="quiz-container">
+            <div class="quiz-question active-question">
+                <p>1. Which part absorbs water and nutrients?</p>
+                <button onclick="checkAnswer(this, true)">Roots</button>
+                <button onclick="checkAnswer(this, false)">Leaves</button>
+                <button onclick="checkAnswer(this, false)">Flower</button>
+            </div>
+            <!-- Add more questions similarly -->
+        </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="section">
+        <h2>📩 Ask a Question</h2>
+        <form onsubmit="handleSubmit(event)">
+            <input type="text" placeholder="Your Name" required>
+            <input type="email" placeholder="Email" required>
+            <textarea placeholder="Your question..." rows="4" required></textarea>
+            <button type="submit">Send Question</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Interactive Diagram
+    function showInfo(part) {
+        const info = {
+            roots: {title: "Root System", content: "Absorbs water and nutrients from soil, stores food, anchors plant"},
+            stem: {title: "Stem Structure", content: "Transports fluids, supports leaves and flowers, stores nutrients"},
+            leaves: {title: "Leaf Anatomy", content: "Site of photosynthesis with chloroplasts, regulates gas exchange"}
+        };
+        document.getElementById('modal-title').textContent = info[part].title;
+        document.getElementById('modal-content').textContent = info[part].content;
+        document.getElementById('info-modal').style.display = 'block';
+    }
+
+    function hideModal() {
+        document.getElementById('info-modal').style.display = 'none';
+    }
+
+    // Growth Simulation
+    function startGrowth() {
+        const stages = document.querySelectorAll('.growth-stage');
+        stages.forEach((stage, index) => {
+            setTimeout(() => {
+                stage.style.opacity = '1';
+                if(index === stages.length - 1) {
+                    stage.style.transform = 'translateX(-50%) scaleY(1.1)';
+                }
+            }, index * 1000);
+        });
+
+        setTimeout(() => {
+            stages.forEach(stage => stage.style.opacity = '0');
+        }, 5000);
+    }
+
+    // Quiz Logic
+    function checkAnswer(button, isCorrect) {
+        button.classList.add(isCorrect ? 'correct' : 'incorrect');
+        setTimeout(() => {
+            button.classList.remove('correct', 'incorrect');
+            // Add question navigation logic
+        }, 1000);
+    }
+
+    // Form Handling
+    function handleSubmit(event) {
+        event.preventDefault();
+        alert('Thank you! Your question has been submitted.');
+        event.target.reset();
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('info-modal')) {
+            hideModal();
+        }
+    }
+</script>
+</body>
+</html>

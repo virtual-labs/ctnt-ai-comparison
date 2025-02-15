@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduNext - Future Ready Learning</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    :root {
+      --primary: #2A5C82;
+      --secondary: #F36F27;
+      --light: #F4F7FA;
+    }
+
+    nav {
+      padding: 1.5rem 5%;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 40%, #1a3a52);
+      color: white;
+      padding: 6rem 5% 4rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .new-normal-section {
+      background: var(--light);
+      padding: 4rem 5%;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      color: var(--primary);
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      color: var(--secondary);
+      margin-bottom: 1rem;
+    }
+
+    .cta-button {
+      background: var(--secondary);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 25px;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+    }
+
+    .hybrid-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      padding: 4rem 5%;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .hybrid-section {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+  <style>
+    /* Previous styles remain unchanged */
+    /* Add these new styles */
+
+    .simulation-section {
+      padding: 4rem 5%;
+      background: #fff;
+    }
+
+    .simulation-container {
+      background: var(--light);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .simulation-step {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .simulation-active {
+      display: block;
+    }
+
+    .simulation-choice {
+      background: white;
+      border: 2px solid var(--primary);
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .simulation-choice:hover {
+      transform: translateX(10px);
+      border-color: var(--secondary);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin: 2rem 0;
+    }
+
+    .progress {
+      height: 100%;
+      background: var(--secondary);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .form-section {
+      background: var(--primary);
+      color: white;
+      padding: 4rem 5%;
+      text-align: center;
+    }
+
+    .contact-form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      background: #fff;
+      border-radius: 50%;
+      margin: 0 auto 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::after {
+      content: "🎓";
+      font-size: 3rem;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+<!-- Existing navigation and hero sections remain unchanged -->
+
+<!-- Add this new simulation section -->
+<section class="simulation-section">
+  <div class="section-title">
+    <h2>Career Path Simulator</h2>
+    <p>Experience your future career in tech!</p>
+  </div>
+
+  <div class="simulation-container">
+    <div class="progress-bar">
+      <div class="progress" style="width: 0%"></div>
+    </div>
+
+    <div id="step1" class="simulation-step simulation-active">
+      <div class="avatar"></div>
+      <h3>Welcome to Your Tech Career!</h3>
+      <p>You've just graduated with cutting-edge tech skills. Choose your first job:</p>
+      <div class="simulation-choice" onclick="nextStep(2)">
+        <h4>🚀 Startup Developer</h4>
+        <p>Fast-paced environment with multiple responsibilities</p>
+      </div>
+      <div class="simulation-choice" onclick="nextStep(3)">
+        <h4>🏦 Enterprise Engineer</h4>
+        <p>Structured environment with specialized roles</p>
+      </div>
+    </div>
+
+    <div id="step2" class="simulation-step">
+      <h3>Startup Challenge!</h3>
+      <p>Your team needs to choose a tech stack:</p>
+      <div class="simulation-choice" onclick="nextStep(4)">
+        <h4>🌐 Full JavaScript (MERN Stack)</h4>
+        <p>Faster development but newer technology</p>
+      </div>
+      <div class="simulation-choice" onclick="nextStep(5)">
+        <h4>🐍 Python/Django</h4>
+        <p>More established but slower iteration</p>
+      </div>
+    </div>
+
+    <div id="step3" class="simulation-step">
+      <h3>Enterprise Decision</h3>
+      <p>Choose your specialization path:</p>
+      <div class="simulation-choice" onclick="nextStep(6)">
+        <h4>🔐 Cybersecurity</h4>
+        <p>Protecting company assets and data</p>
+      </div>
+      <div class="simulation-choice" onclick="nextStep(7)">
+        <h4>🤖 AI Development</h4>
+        <p>Building intelligent enterprise solutions</p>
+      </div>
+    </div>
+
+    <!-- Add more steps as needed -->
+
+    <div id="finalStep" class="simulation-step">
+      <h3>🎉 Congratulations!</h3>
+      <p>You've completed your first career milestone!</p>
+      <p>Get personalized learning recommendations:</p>
+      <button onclick="showForm()" class="cta-button">Get Your Roadmap</button>
+    </div>
+  </div>
+</section>
+
+<!-- Add this form section -->
+<section class="form-section" id="contact">
+  <div class="contact-form">
+    <h2>Get Your Personalized Learning Plan</h2>
+    <form id="leadForm" onsubmit="return submitForm(event)">
+      <input type="text" class="form-input" placeholder="Full Name" required>
+      <input type="email" class="form-input" placeholder="Email Address" required>
+      <input type="tel" class="form-input" placeholder="Phone Number">
+      <select class="form-input" required>
+        <option value="">Select Career Interest</option>
+        <option>Software Development</option>
+        <option>Data Science</option>
+        <option>Cybersecurity</option>
+        <option>AI Engineering</option>
+      </select>
+      <button type="submit" class="cta-button">Get Started Now</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 5; // Update with actual total steps
+
+  function nextStep(stepNumber) {
+    document.getElementById(`step${currentStep}`).classList.remove('simulation-active');
+    currentStep = stepNumber;
+    document.getElementById(`step${currentStep}`).classList.add('simulation-active');
+    updateProgress((stepNumber/totalSteps)*100);
+  }
+
+  function updateProgress(percentage) {
+    document.querySelector('.progress').style.width = percentage + '%';
+  }
+
+  function showForm() {
+    document.getElementById('contact').scrollIntoView({
+      behavior: 'smooth'
+    });
+  }
+
+  function submitForm(event) {
+    event.preventDefault();
+    alert('Thank you! We\'ll contact you with personalized recommendations shortly!');
+    document.getElementById('leadForm').reset();
+    return false;
+  }
+</script>
+</body>
+</html>

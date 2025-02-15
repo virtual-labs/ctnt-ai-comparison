@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Lab for Operating Systems</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --background: #f8f9fa;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+    }
+
+    nav {
+      background-color: var(--primary-color);
+      padding: 1rem;
+      color: white;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .section {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .experiment-visualization {
+      border: 2px solid #ddd;
+      padding: 1rem;
+      margin: 1rem 0;
+      min-height: 300px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .process-box {
+      background: #e8f4f8;
+      padding: 1rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    button {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    footer {
+      background-color: var(--primary-color);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="#home">Home</a>
+    <a href="#experiments">Experiments</a>
+    <a href="#pedagogy">Pedagogy</a>
+    <a href="#technology">Technology</a>
+    <a href="#about">About</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Home Section -->
+  <section id="home" class="section">
+    <h1>Virtual Lab in Operating Systems</h1>
+    <p><strong>Discipline:</strong> Computer Science and Engineering</p>
+    <p><strong>Target Group:</strong> UG 2nd Year (4th Semester)</p>
+    <p>Part of AICTE course PCC-CS403 (Page 342)</p>
+  </section>
+
+  <!-- Experiments Section -->
+  <section id="experiments" class="section">
+    <h2>Experiments</h2>
+    <div class="experiment">
+      <h3>1. Process State Transitions & Context Switching</h3>
+      <div class="experiment-visualization">
+        <div class="process-box" id="process1">
+          <h4>Process A</h4>
+          <p>State: <span>Running</span></p>
+          <div class="pcb">PCB Data</div>
+        </div>
+        <div class="process-box" id="process2">
+          <h4>Process B</h4>
+          <p>State: <span>Waiting</span></p>
+          <div class="pcb">PCB Data</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button onclick="switchContext()">Trigger Context Switch</button>
+        <button onclick="createProcess()">Create New Process</button>
+      </div>
+      <p><strong>Objective:</strong> Simulate process lifecycle and context switching dynamics.</p>
+    </div>
+  </section>
+
+  <!-- Pedagogy Section -->
+  <section id="pedagogy" class="section">
+    <h2>Pedagogical Value</h2>
+    <p>This lab complements theoretical learning by enabling interactive simulations of OS algorithms. Students can:</p>
+    <ul>
+      <li>Observe algorithm execution in real-time</li>
+      <li>Manipulate simulations via UI controls</li>
+      <li>Validate actions through system logs</li>
+    </ul>
+  </section>
+
+  <!-- Technology Section -->
+  <section id="technology" class="section">
+    <h2>Technology Stack</h2>
+    <p>Built using modern web technologies:</p>
+    <ul>
+      <li>HTML5 & CSS for structure and styling</li>
+      <li>JavaScript/Elm for interactivity</li>
+      <li>Static web deployment</li>
+    </ul>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="section">
+    <h2>About the Author</h2>
+    <p>Developed by an OS researcher with:</p>
+    <ul>
+      <li>Experience building Linux virtual labs</li>
+      <li>Expertise in mutual exclusion algorithms</li>
+      <li>10+ years teaching systems courses at IIITH</li>
+    </ul>
+  </section>
+</div>
+
+<footer>
+  <p>© 2025 Virtual OS Lab. Part of AICTE curriculum PCC-CS403.</p>
+</footer>
+
+<script>
+  function switchContext() {
+    const processes = document.querySelectorAll('.process-box');
+    processes.forEach(proc => {
+      const state = proc.querySelector('span');
+      state.textContent = state.textContent === 'Running' ? 'Waiting' : 'Running';
+    });
+  }
+
+  function createProcess() {
+    const viz = document.querySelector('.experiment-visualization');
+    const newProcess = document.createElement('div');
+    newProcess.className = 'process-box';
+    newProcess.innerHTML = `
+                <h4>Process ${String.fromCharCode(65 + viz.children.length)}</h4>
+                <p>State: <span>New</span></p>
+                <div class="pcb">PCB Data</div>
+            `;
+    viz.appendChild(newProcess);
+  }
+</script>
+</body>
+</html>

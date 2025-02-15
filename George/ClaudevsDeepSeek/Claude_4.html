@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn Plant Anatomy</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #2ecc71;
+      --secondary-color: #27ae60;
+      --background-color: #f5f9f7;
+      --text-color: #2c3e50;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    h1, h2, h3 {
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5em;
+      margin-bottom: 1.5em;
+      color: var(--primary-color);
+    }
+
+    .section {
+      background: white;
+      padding: 30px;
+      margin: 30px 0;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease;
+    }
+
+    .section:hover {
+      transform: translateY(-5px);
+    }
+
+    .interactive-diagram {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .plant-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: rgba(46, 204, 113, 0.3);
+      border: 2px solid var(--primary-color);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .hotspot:hover {
+      transform: scale(1.3);
+      background: rgba(46, 204, 113, 0.6);
+    }
+
+    .info-box {
+      display: none;
+      position: absolute;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      z-index: 100;
+      max-width: 250px;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+
+    .quiz-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .quiz-question {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .quiz-question label {
+      display: block;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .quiz-question label:hover {
+      background: #f0f0f0;
+    }
+
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.3s;
+      font-size: 1em;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    }
+
+    .progress-tracker {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 15px 25px;
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      color: var(--primary-color);
+      z-index: 1000;
+    }
+
+    .result-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    #score {
+      font-size: 1.5em;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<div class="progress-tracker">
+  Learning Progress: <span id="progress">0%</span>
+</div>
+
+<h1>Interactive Plant Anatomy Learning Portal</h1>
+
+<div class="section">
+  <h2>Interactive Plant Diagram</h2>
+  <div class="interactive-diagram">
+    <svg class="plant-svg" viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+      <!-- Plant stem -->
+      <path d="M200 100 L200 500" stroke="#2ecc71" stroke-width="10" fill="none"/>
+
+      <!-- Leaves -->
+      <path d="M200 200 Q300 250 200 300" stroke="#2ecc71" stroke-width="8" fill="#87D37C"/>
+      <path d="M200 200 Q100 250 200 300" stroke="#2ecc71" stroke-width="8" fill="#87D37C"/>
+      <path d="M200 350 Q300 400 200 450" stroke="#2ecc71" stroke-width="8" fill="#87D37C"/>
+      <path d="M200 350 Q100 400 200 450" stroke="#2ecc71" stroke-width="8" fill="#87D37C"/>
+
+      <!-- Roots -->
+      <path d="M200 500 Q150 550 100 580" stroke="#8B4513" stroke-width="6" fill="none"/>
+      <path d="M200 500 Q250 550 300 580" stroke="#8B4513" stroke-width="6" fill="none"/>
+      <path d="M200 500 Q200 550 200 580" stroke="#8B4513" stroke-width="6" fill="none"/>
+
+      <!-- Flower -->
+      <circle cx="200" cy="100" r="30" fill="#FF69B4"/>
+      <circle cx="200" cy="100" r="15" fill="#FFD700"/>
+    </svg>
+
+    <!-- Hotspots -->
+    <div class="hotspot" style="top: 15%; left: 48%" data-part="Flower"></div>
+    <div class="hotspot" style="top: 40%; left: 48%" data-part="Leaf"></div>
+    <div class="hotspot" style="top: 60%; left: 48%" data-part="Stem"></div>
+    <div class="hotspot" style="top: 85%; left: 48%" data-part="Root"></div>
+
+    <!-- Info boxes -->
+    <div class="info-box" id="flower-info">
+      <h3>Flower</h3>
+      <p>The reproductive organ of the plant. Contains petals, stamens, and pistils for plant reproduction.</p>
+    </div>
+    <div class="info-box" id="leaf-info">
+      <h3>Leaf</h3>
+      <p>The main organ for photosynthesis. Contains chlorophyll and specialized cells for gas exchange.</p>
+    </div>
+    <div class="info-box" id="stem-info">
+      <h3>Stem</h3>
+      <p>Provides support and conducts water and nutrients through the vascular system.</p>
+    </div>
+    <div class="info-box" id="root-info">
+      <h3>Root</h3>
+      <p>Absorbs water and minerals from soil. Provides anchorage and storage of food.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Student Query Form</h2>
+  <form id="queryForm">
+    <input type="text" placeholder="Your Name" required>
+    <input type="email" placeholder="Your Email" required>
+    <textarea placeholder="Your Question about Plant Anatomy" required></textarea>
+    <button type="submit">Submit Query</button>
+  </form>
+</div>
+
+<div class="section">
+  <h2>Plant Anatomy Quiz</h2>
+  <div class="quiz-container">
+    <div id="quiz"></div>
+    <button id="submit-quiz" style="display: none;">Submit Quiz</button>
+  </div>
+  <div class="result-container" id="results" style="display: none;">
+    <h3>Your Results</h3>
+    <p>Score: <span id="score"></span></p>
+    <div id="correct-answers"></div>
+  </div>
+</div>
+
+<div class="section notes-section">
+  <h2>Personal Study Notes</h2>
+  <textarea id="personalNotes" placeholder="Take notes while you study..."></textarea>
+  <button onclick="saveNotes()">Save Notes</button>
+</div>
+
+<script>
+  // Interactive diagram functionality
+  $(document).ready(function() {
+    $('.hotspot').hover(function(e) {
+      const part = $(this).data('part').toLowerCase();
+      $(`#${part}-info`).css({
+        display: 'block',
+        left: e.pageX + 10,
+        top: e.pageY + 10
+      });
+    }, function() {
+      $('.info-box').hide();
+    });
+
+    // Quiz data
+    const quizQuestions = [
+      {
+        question: "What is the main function of leaves?",
+        options: ["Photosynthesis", "Water absorption", "Support", "Reproduction"],
+        correct: 0
+      },
+      {
+        question: "Which plant part absorbs water and minerals from soil?",
+        options: ["Leaves", "Stem", "Roots", "Flowers"],
+        correct: 2
+      },
+      {
+        question: "What is the main function of the stem?",
+        options: ["Reproduction", "Support and transport", "Photosynthesis", "Storage only"],
+        correct: 1
+      }
+    ];
+
+    // Generate quiz
+    let quizHTML = '';
+    quizQuestions.forEach((q, i) => {
+      quizHTML += `
+                    <div class="quiz-question">
+                        <p><strong>Question ${i + 1}:</strong> ${q.question}</p>
+                        ${q.options.map((opt, j) => `
+                            <label>
+                                <input type="radio" name="q${i}" value="${j}">
+                                ${opt}
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+    });
+    $('#quiz').html(quizHTML);
+    $('#submit-quiz').show();
+
+    // Quiz submission
+    $('#submit-quiz').click(function() {
+      let score = 0;
+      let results = '';
+
+      quizQuestions.forEach((q, i) => {
+        const selected = $(`input[name="q${i}"]:checked`).val();
+        if (selected == q.correct) score++;
+
+        results += `
+                        <p>Question ${i + 1}: ${selected == q.correct ? '✅ Correct' : '❌ Incorrect'}<br>
+                        Correct answer: ${q.options[q.correct]}</p>
+                    `;
+      });
+
+      $('#score').text(`${score}/${quizQuestions.length} (${(score/quizQuestions.length*100).toFixed(1)}%)`);
+      $('#correct-answers').html(results);
+      $('.result-container').fadeIn();
+
+      // Update progress
+      updateProgress(score/quizQuestions.length * 100);
+    });
+
+    // Form submission
+    $('#queryForm').submit(function(e) {
+      e.preventDefault();
+      alert('Query submitted successfully!');
+      this.reset();
+    });
+  });
+
+  // Progress tracking
+  function updateProgress(quizScore) {
+    const hasNotes = $('#personalNotes').val().length > 0;
+    const progress = (quizScore + (hasNotes ? 20 : 0)) / 1.2;
+    $('#progress').text(`${Math.round(progress)}%`);
+  }
+
+  // Notes functionality
+  function saveNotes() {
+    localStorage.setItem('plantAnatomyNotes', $('#personalNotes').val());
+    alert('Notes saved successfully!');
+    updateProgress(0);
+  }
+
+  // Load saved notes
+  if (localStorage.getItem('plantAnatomyNotes')) {
+    $('#personalNotes').val(localStorage.getItem('plantAnatomyNotes'));
+  }
+</script>
+</body>
+</html>

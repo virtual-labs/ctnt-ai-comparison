@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Plant Anatomy Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8f0;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #plant-diagram {
+            position: relative;
+            text-align: center;
+        }
+        .plant-part {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .plant-part:hover {
+            transform: scale(1.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .quiz-question {
+            display: none;
+        }
+        .active-question {
+            display: block;
+        }
+        #growth-simulation {
+            height: 200px;
+            position: relative;
+            margin: 20px 0;
+        }
+        #plant-growth {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: height 2s;
+            background: linear-gradient(to right, #228B22, #2E8B57);
+            width: 50px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<!-- Plant Anatomy Diagram -->
+<div class="section">
+    <h2>Interactive Plant Diagram</h2>
+    <div id="plant-diagram">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Plant_anatomy.svg" usemap="#plant-map" width="400">
+        <map name="plant-map">
+            <area shape="rect" coords="180,300,220,400" alt="Roots" onclick="showInfo('roots')">
+            <area shape="rect" coords="190,200,210,300" alt="Stem" onclick="showInfo('stem')">
+            <area shape="circle" coords="200,150,50" alt="Leaves" onclick="showInfo('leaves')">
+        </map>
+    </div>
+    <div id="info-modal" class="modal">
+        <h3 id="modal-title"></h3>
+        <p id="modal-content"></p>
+        <button onclick="hideModal()">Close</button>
+    </div>
+</div>
+
+<!-- Growth Simulation (Extra Feature) -->
+<div class="section">
+    <h2>Plant Growth Simulation</h2>
+    <div id="growth-simulation">
+        <div id="plant-growth"></div>
+    </div>
+    <button onclick="simulateGrowth()">Grow Plant!</button>
+</div>
+
+<!-- Quiz Section -->
+<div class="section">
+    <h2>Plant Anatomy Quiz</h2>
+    <div id="quiz-container">
+        <div class="quiz-question" id="q1">
+            <p>1. Which part of the plant absorbs water and nutrients?</p>
+            <button onclick="checkAnswer(this, true)">Roots</button>
+            <button onclick="checkAnswer(this, false)">Leaves</button>
+            <button onclick="checkAnswer(this, false)">Flower</button>
+        </div>
+        <div class="quiz-question" id="q2">
+            <p>2. What is the main function of the stem?</p>
+            <button onclick="checkAnswer(this, false)">Photosynthesis</button>
+            <button onclick="checkAnswer(this, true)">Transport nutrients</button>
+            <button onclick="checkAnswer(this, false)">Absorb water</button>
+        </div>
+        <div class="quiz-question" id="q3">
+            <p>3. Where does photosynthesis primarily occur?</p>
+            <button onclick="checkAnswer(this, false)">Roots</button>
+            <button onclick="checkAnswer(this, true)">Leaves</button>
+            <button onclick="checkAnswer(this, false)">Stem</button>
+        </div>
+        <div id="quiz-results"></div>
+    </div>
+</div>
+
+<!-- Contact Form -->
+<div class="section">
+    <h2>Ask a Question</h2>
+    <form onsubmit="handleSubmit(event)">
+        <input type="text" placeholder="Name" required>
+        <input type="email" placeholder="Email" required>
+        <textarea placeholder="Your question" rows="4" required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<script>
+    // Interactive Diagram Functions
+    function showInfo(part) {
+        const info = {
+            roots: {title: "Root System", content: "Anchors plant, absorbs water and nutrients from soil"},
+            stem: {title: "Plant Stem", content: "Supports plant, transports water and nutrients"},
+            leaves: {title: "Leaves", content: "Main site of photosynthesis through chloroplasts"}
+        };
+        document.getElementById('modal-title').textContent = info[part].title;
+        document.getElementById('modal-content').textContent = info[part].content;
+        document.getElementById('info-modal').style.display = 'block';
+    }
+
+    function hideModal() {
+        document.getElementById('info-modal').style.display = 'none';
+    }
+
+    // Quiz Functions
+    let currentQuestion = 0;
+    let score = 0;
+    const questions = document.getElementsByClassName('quiz-question');
+
+    function showQuestion() {
+        Array.from(questions).forEach((q, index) => {
+            q.style.display = index === currentQuestion ? 'block' : 'none';
+        });
+    }
+
+    function checkAnswer(button, isCorrect) {
+        if (isCorrect) score++;
+        button.style.backgroundColor = isCorrect ? '#4CAF50' : '#ff4444';
+        setTimeout(() => {
+            button.style.backgroundColor = '';
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }, 1000);
+    }
+
+    function showResults() {
+        document.getElementById('quiz-container').innerHTML = `
+                <h3>Your Score: ${score}/${questions.length}</h3>
+                <p>Correct Answers:</p>
+                <ol>
+                    <li>Roots</li>
+                    <li>Transport nutrients</li>
+                    <li>Leaves</li>
+                </ol>
+                <button onclick="location.reload()">Try Again</button>
+            `;
+    }
+
+    // Growth Simulation
+    function simulateGrowth() {
+        const plant = document.getElementById('plant-growth');
+        plant.style.height = '180px';
+        setTimeout(() => plant.style.height = '0', 4000);
+    }
+
+    // Form Handling
+    function handleSubmit(event) {
+        event.preventDefault();
+        alert('Question submitted! We will respond soon.');
+        event.target.reset();
+    }
+
+    // Initialize Quiz
+    showQuestion();
+</script>
+</body>
+</html>

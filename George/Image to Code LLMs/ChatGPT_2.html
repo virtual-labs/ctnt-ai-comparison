@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mean and Covariance Simulator</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e2f;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1200px;
+            gap: 1rem;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 600px;
+            background: #2e2e40;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: #2e2e40;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        input, button {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            background: #3e3e50;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            outline: none;
+        }
+        button:hover {
+            background: #5e5e70;
+        }
+        svg {
+            width: 100%;
+            height: 500px;
+            cursor: move;
+        }
+    </style>
+</head>
+<body>
+<h1>Mean and Covariance Simulator</h1>
+<div class="container">
+    <div class="visualization" id="chart"></div>
+    <div class="controls">
+        <!-- Class 1 controls -->
+        <div class="control-group">
+            <label for="class1-count">Class 1 Count</label>
+            <input type="number" id="class1-count" value="100">
+        </div>
+        <div class="control-group">
+            <label for="class1-mean">Class 1 Mean (x, y)</label>
+            <input type="text" id="class1-mean" value="0, 0">
+        </div>
+        <div class="control-group">
+            <label for="class1-covariance">Class 1 Covariance (xx, xy, yx, yy)</label>
+            <input type="text" id="class1-covariance" value="1, 0, 0, 1">
+        </div>
+        <div class="control-group">
+            <button id="generate-class1">Generate Class 1</button>
+        </div>
+        <!-- Class 2 controls -->
+        <div class="control-group">
+            <label for="class2-count">Class 2 Count</label>
+            <input type="number" id="class2-count" value="100">
+        </div>
+        <div class="control-group">
+            <label for="class2-mean">Class 2 Mean (x, y)</label>
+            <input type="text" id="class2-mean" value="2, 2">
+        </div>
+        <div class="control-group">
+            <label for="class2-covariance">Class 2 Covariance (xx, xy, yx, yy)</label>
+            <input type="text" id="class2-covariance" value="1, 0, 0, 1">
+        </div>
+        <div class="control-group">
+            <button id="generate-class2">Generate Class 2</button>
+        </div>
+        <!-- Extra Feature: Add custom data point -->
+        <div class="control-group">
+            <button id="toggle-custom">Add Custom Point: OFF</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set up SVG and dimensions
+    const svg = d3.select("#chart").append("svg");
+    const width = svg.node().getBoundingClientRect().width;
+    const height = svg.node().getBoundingClientRect().height;
+    const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+
+    // Create a container group for all chart elements (axes and points)
+    const container = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // Create separate groups for axes and points.
+    const gAxes = container.append("g").attr("class", "axes");
+    const gPoints = container.append("g").attr("class", "points");
+
+    // Create groups for each type of point to keep them separate.
+    const gClass1 = gPoints.append("g").attr("class", "class1");
+    const gClass2 = gPoints.append("g").attr("class", "class2");
+    const gCustom = gPoints.append("g").attr("class", "custom");
+
+    // Define the scales
+    const xScale = d3.scaleLinear().domain([-5, 5]).range([0, chartWidth]);
+    const yScale = d3.scaleLinear().domain([-5, 5]).range([chartHeight, 0]);
+
+    // Render initial axes
+    const xAxis = d3.axisBottom(xScale);
+    const yAxis = d3.axisLeft(yScale);
+
+    const gXAxis = gAxes.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0, ${chartHeight})`)
+        .call(xAxis);
+    const gYAxis = gAxes.append("g")
+        .attr("class", "y-axis")
+        .call(yAxis);
+
+    // Add a transparent rect for capturing click events (for custom point addition)
+    const backgroundRect = gPoints.append("rect")
+        .attr("width", chartWidth)
+        .attr("height", chartHeight)
+        .attr("fill", "none")
+        .style("pointer-events", "all");
+
+    // Flag for adding custom points
+    let addCustomMode = false;
+    document.getElementById("toggle-custom").addEventListener("click", function () {
+        addCustomMode = !addCustomMode;
+        this.textContent = addCustomMode ? "Add Custom Point: ON" : "Add Custom Point: OFF";
+    });
+
+    // Handle click for adding a custom point (if mode is enabled)
+    backgroundRect.on("click", function (event) {
+        if (!addCustomMode) return;
+        // Get mouse position relative to gPoints with current transform applied.
+        const [mx, my] = d3.pointer(event);
+        // Invert the zoom transform to get the original data coordinates
+        const tx = transform.rescaleX(xScale).invert(mx);
+        const ty = transform.rescaleY(yScale).invert(my);
+        // Append a custom point
+        gCustom.append("circle")
+            .attr("cx", xScale(tx))
+            .attr("cy", yScale(ty))
+            .attr("r", 4)
+            .attr("fill", "lime")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1);
+        // Turn off custom mode after adding one point
+        addCustomMode = false;
+        document.getElementById("toggle-custom").textContent = "Add Custom Point: OFF";
+    });
+
+    // Global variable to store the current zoom transform
+    let transform = d3.zoomIdentity;
+
+    // Add zoom behavior
+    const zoom = d3.zoom()
+        .scaleExtent([0.5, 20])
+        .extent([[0, 0], [chartWidth, chartHeight]])
+        .on("zoom", zoomed);
+
+    svg.call(zoom);
+
+    function zoomed(event) {
+        transform = event.transform;
+        // Create new scales based on zoom
+        const newXScale = transform.rescaleX(xScale);
+        const newYScale = transform.rescaleY(yScale);
+
+        // Update axes with new scales
+        gXAxis.call(xAxis.scale(newXScale));
+        gYAxis.call(yAxis.scale(newYScale));
+
+        // Update positions of all circles in each group
+        gPoints.selectAll("circle")
+            .attr("cx", d => newXScale(d.x))
+            .attr("cy", d => newYScale(d.y));
+
+        // Update the background rectangle size and position so it always covers the chart area
+        backgroundRect
+            .attr("width", chartWidth)
+            .attr("height", chartHeight);
+    }
+
+    // Utility function to parse comma-separated values
+    function parseCSV(str, count) {
+        return str.split(",")
+            .map(s => Number(s.trim()))
+            .filter((d, i) => i < count);
+    }
+
+    // Function to generate Gaussian distributed data.
+    // Here we assume a diagonal covariance matrix (only variance in x and y).
+    function generateGaussian(mean, covariance, count) {
+        const data = [];
+        const meanVector = parseCSV(mean, 2);
+        const covValues = parseCSV(covariance, 4);
+        // Using only covValues[0] for x and covValues[3] for y variance.
+        const stdX = Math.sqrt(Math.abs(covValues[0]));
+        const stdY = Math.sqrt(Math.abs(covValues[3]));
+        const randX = d3.randomNormal(meanVector[0], stdX);
+        const randY = d3.randomNormal(meanVector[1], stdY);
+        for (let i = 0; i < count; i++) {
+            data.push({ x: randX(), y: randY() });
+        }
+        return data;
+    }
+
+    // Render points for a given group using the current zoom transform
+    function renderPoints(data, group, color) {
+        // Bind data to circles; using a key function if needed to preserve identity.
+        group.selectAll("circle").data(data)
+            .join(
+                enter => enter.append("circle")
+                    .attr("cx", d => transform.rescaleX(xScale)(d.x))
+                    .attr("cy", d => transform.rescaleY(yScale)(d.y))
+                    .attr("r", 3)
+                    .attr("fill", color)
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 0.5),
+                update => update
+                    .attr("cx", d => transform.rescaleX(xScale)(d.x))
+                    .attr("cy", d => transform.rescaleY(yScale)(d.y)),
+                exit => exit.remove()
+            );
+        // Store the data with the circles so that zooming can update their positions.
+        group.selectAll("circle").each(function(d) {
+            d.x = d.x; d.y = d.y;
+        });
+    }
+
+    // Event listeners for generating class data
+    document.getElementById("generate-class1").addEventListener("click", () => {
+        const count = +document.getElementById("class1-count").value;
+        const mean = document.getElementById("class1-mean").value;
+        const covariance = document.getElementById("class1-covariance").value;
+        const data = generateGaussian(mean, covariance, count);
+        renderPoints(data, gClass1, "red");
+    });
+
+    document.getElementById("generate-class2").addEventListener("click", () => {
+        const count = +document.getElementById("class2-count").value;
+        const mean = document.getElementById("class2-mean").value;
+        const covariance = document.getElementById("class2-covariance").value;
+        const data = generateGaussian(mean, covariance, count);
+        renderPoints(data, gClass2, "blue");
+    });
+</script>
+</body>
+</html>

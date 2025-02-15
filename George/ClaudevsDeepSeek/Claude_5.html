@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Process Life-cycle and Context Switching Virtual Lab</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .button-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .button-warning {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .button-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .process-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .process-item {
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+    }
+
+    .process-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .process-state {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    .state-ready { background-color: #cfe2ff; color: #084298; }
+    .state-running { background-color: #d1e7dd; color: #0f5132; }
+    .state-waiting { background-color: #fff3cd; color: #664d03; }
+    .state-terminated { background-color: #f8d7da; color: #842029; }
+
+    .process-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pcb-details {
+      display: grid;
+      gap: 15px;
+    }
+
+    .pcb-section {
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 10px;
+    }
+
+    .pcb-section h4 {
+      margin-bottom: 8px;
+      color: #495057;
+    }
+
+    .register-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Process Life-cycle and Context Switching Virtual Lab</h1>
+  </div>
+
+  <div class="controls">
+    <button id="createProcess" class="button button-primary">Create Process</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Processes</h2>
+      <div id="processList" class="process-list">
+        <!-- Processes will be added here -->
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Process Control Block (PCB)</h2>
+      <div id="pcbDetails" class="pcb-details">
+        <div class="empty-state">No process currently running</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  class Process {
+    constructor(pid) {
+      this.pid = pid;
+      this.state = 'READY';
+      this.pcb = {
+        programCounter: 0,
+        registers: {
+          ax: Math.floor(Math.random() * 100),
+          bx: Math.floor(Math.random() * 100),
+          cx: Math.floor(Math.random() * 100),
+          dx: Math.floor(Math.random() * 100)
+        },
+        stackPointer: Math.floor(Math.random() * 1000)
+      };
+    }
+  }
+
+  class ProcessManager {
+    constructor() {
+      this.processes = [];
+      this.nextPid = 1;
+      this.runningProcess = null;
+    }
+
+    createProcess() {
+      const process = new Process(this.nextPid++);
+      this.processes.push(process);
+      this.updateUI();
+    }
+
+    switchContext(pid) {
+      if (this.runningProcess) {
+        this.runningProcess.state = 'READY';
+      }
+
+      const process = this.processes.find(p => p.pid === pid);
+      if (process && process.state !== 'TERMINATED') {
+        process.state = 'RUNNING';
+        this.runningProcess = process;
+      }
+
+      this.updateUI();
+    }
+
+    setProcessState(pid, newState) {
+      const process = this.processes.find(p => p.pid === pid);
+      if (process) {
+        process.state = newState;
+        if (newState === 'TERMINATED' && this.runningProcess?.pid === pid) {
+          this.runningProcess = null;
+        }
+      }
+      this.updateUI();
+    }
+
+    updateUI() {
+      // Update process list
+      const processListEl = document.getElementById('processList');
+      processListEl.innerHTML = this.processes.map(process => `
+                    <div class="process-item">
+                        <div class="process-header">
+                            <h3>Process ${process.pid}</h3>
+                            <span class="process-state state-${process.state.toLowerCase()}">${process.state}</span>
+                        </div>
+                        <div>
+                            PC: ${process.pcb.programCounter}
+                            SP: ${process.pcb.stackPointer}
+                        </div>
+                        <div class="process-controls">
+                            ${this.getProcessControls(process)}
+                        </div>
+                    </div>
+                `).join('');
+
+      // Update PCB details
+      const pcbDetailsEl = document.getElementById('pcbDetails');
+      if (this.runningProcess) {
+        pcbDetailsEl.innerHTML = `
+                        <div class="pcb-section">
+                            <h4>Process Information</h4>
+                            <div>Process ID: ${this.runningProcess.pid}</div>
+                            <div>State: ${this.runningProcess.state}</div>
+                        </div>
+                        <div class="pcb-section">
+                            <h4>Registers</h4>
+                            <div class="register-grid">
+                                <div>AX: ${this.runningProcess.pcb.registers.ax}</div>
+                                <div>BX: ${this.runningProcess.pcb.registers.bx}</div>
+                                <div>CX: ${this.runningProcess.pcb.registers.cx}</div>
+                                <div>DX: ${this.runningProcess.pcb.registers.dx}</div>
+                            </div>
+                        </div>
+                        <div class="pcb-section">
+                            <h4>Memory Management</h4>
+                            <div>Program Counter: ${this.runningProcess.pcb.programCounter}</div>
+                            <div>Stack Pointer: ${this.runningProcess.pcb.stackPointer}</div>
+                        </div>
+                    `;
+      } else {
+        pcbDetailsEl.innerHTML = '<div class="empty-state">No process currently running</div>';
+      }
+
+      // Add event listeners to new buttons
+      document.querySelectorAll('[data-pid]').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const { pid, action } = e.target.dataset;
+          switch (action) {
+            case 'run':
+              this.switchContext(parseInt(pid));
+              break;
+            case 'wait':
+              this.setProcessState(parseInt(pid), 'WAITING');
+              break;
+            case 'ready':
+              this.setProcessState(parseInt(pid), 'READY');
+              break;
+            case 'terminate':
+              this.setProcessState(parseInt(pid), 'TERMINATED');
+              break;
+          }
+        });
+      });
+    }
+
+    getProcessControls(process) {
+      if (process.state === 'TERMINATED') return '';
+
+      let controls = [];
+
+      if (process.state !== 'RUNNING') {
+        controls.push(`
+                        <button class="button button-primary" data-pid="${process.pid}" data-action="run">
+                            Run
+                        </button>
+                    `);
+      }
+
+      if (process.state === 'RUNNING') {
+        controls.push(`
+                        <button class="button button-warning" data-pid="${process.pid}" data-action="wait">
+                            Wait
+                        </button>
+                    `);
+      }
+
+      if (process.state === 'WAITING') {
+        controls.push(`
+                        <button class="button button-primary" data-pid="${process.pid}" data-action="ready">
+                            Ready
+                        </button>
+                    `);
+      }
+
+      controls.push(`
+                    <button class="button button-danger" data-pid="${process.pid}" data-action="terminate">
+                        Terminate
+                    </button>
+                `);
+
+      return controls.join('');
+    }
+  }
+
+  // Initialize the application
+  const processManager = new ProcessManager();
+
+  // Add event listener to create process button
+  document.getElementById('createProcess').addEventListener('click', () => {
+    processManager.createProcess();
+  });
+</script>
+</body>
+</html>

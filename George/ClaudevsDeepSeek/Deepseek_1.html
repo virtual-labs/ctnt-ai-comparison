@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNext - Future Ready Learning</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        :root {
+            --primary: #2A5C82;
+            --secondary: #F36F27;
+            --light: #F4F7FA;
+        }
+
+        nav {
+            padding: 1.5rem 5%;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 40%, #1a3a52);
+            color: white;
+            padding: 6rem 5% 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .new-normal-section {
+            background: var(--light);
+            padding: 4rem 5%;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+        }
+
+        .hybrid-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            padding: 4rem 5%;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .hybrid-section {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">EduNext</div>
+    <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#courses">Courses</a>
+        <a href="#contact">Contact</a>
+    </div>
+</nav>
+
+<section class="hero" id="home">
+    <h1>Learning in the New Normal</h1>
+    <p>Hybrid education solutions for tomorrow's leaders</p>
+    <a href="#courses" class="cta-button">Explore Programs</a>
+</section>
+
+<section class="new-normal-section" id="features">
+    <div class="section-title">
+        <h2>The New Normal in Education</h2>
+        <p>Adapting to future learning environments</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fas fa-laptop-house feature-icon"></i>
+            <h3>Hybrid Learning</h3>
+            <p>Seamless integration of online and in-person education</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-shield-virus feature-icon"></i>
+            <h3>Safe Environment</h3>
+            <p>Health-first approach to physical classrooms</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-cloud feature-icon"></i>
+            <h3>Cloud Campus</h3>
+            <p>24/7 access to learning resources anywhere</p>
+        </div>
+    </div>
+</section>
+
+<section class="hybrid-section">
+    <div>
+        <h2>Flexible Learning Modes</h2>
+        <p>Choose between in-campus, online, or hybrid learning formats tailored to your needs. Our smart classrooms are equipped with cutting-edge technology to ensure equal participation for all students.</p>
+        <a href="#contact" class="cta-button">Schedule Tour</a>
+    </div>
+    <div>
+        <img src="https://images.unsplash.com/photo-1581092333200-13d2cd2cd391?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Hybrid Classroom" style="width:100%; border-radius:10px;">
+    </div>
+</section>
+</body>
+</html>

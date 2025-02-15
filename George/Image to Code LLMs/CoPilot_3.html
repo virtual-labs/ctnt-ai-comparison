@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mean and Covariance Visualization</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .controls {
+      flex: 1;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      .controls h3 {
+        margin-top: 0;
+      }
+      .controls input, .controls button, .controls select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        background-color: #333;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+      }
+      .controls button {
+        cursor: pointer;
+      }
+      .controls button:hover {
+        background-color: #555;
+      }
+      #chart {
+        flex: 2;
+        display: flex;
+        justify-content: center;
+      }
+      svg {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+      }
+      table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+      }
+      table, th, td {
+        border: 1px solid #333;
+      }
+      th, td {
+        padding: 10px;
+        text-align: center;
+      }}
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>Mean and Covariance Visualization</h1>
+</div>
+<div class="container">
+  <div id="chart"></div>
+  <div class="controls">
+    <div>
+      <h3>Add Custom Points</h3>
+      <p>Select class and click on the graph to add points.</p>
+      <select id="class">
+        <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+      </select>
+    </div>
+    <div>
+      <h3>Generate Points</h3>
+      <p>Example values: Mean X: 0, Mean Y: 0, Covariance XX: 1, Covariance YY: 1, Number of Points: 100</p>
+      <input type="number" id="meanX1" placeholder="Mean X (Class 1)">
+      <input type="number" id="meanY1" placeholder="Mean Y (Class 1)">
+      <input type="number" id="covXX1" placeholder="Covariance XX (Class 1)">
+      <input type="number" id="covYY1" placeholder="Covariance YY (Class 1)">
+      <input type="number" id="numPoints1" placeholder="Number of Points (Class 1)">
+      <button onclick="generatePoints(1)">Generate Points (Class 1)</button>
+      <input type="number" id="meanX2" placeholder="Mean X (Class 2)">
+      <input type="number" id="meanY2" placeholder="Mean Y (Class 2)">
+      <input type="number" id="covXX2" placeholder="Covariance XX (Class 2)">
+      <input type="number" id="covYY2" placeholder="Covariance YY (Class 2)">
+      <input type="number" id="numPoints2" placeholder="Number of Points (Class 2)">
+      <button onclick="generatePoints(2)">Generate Points (Class 2)</button>
+    </div>
+    <button onclick="clearPoints()">Clear Points</button>
+    <table>
+      <thead>
+      <tr>
+        <th>Mean X</th>
+        <th>Mean Y</th>
+        <th>Covariance XX</th>
+        <th>Covariance YY</th>
+      </tr>
+      </thead>
+      <tbody id="statsTable">
+      <tr>
+        <td id="meanX">-</td>
+        <td id="meanY">-</td>
+        <td id="covXX">-</td>
+        <td id="covYY">-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+  const width = 800;
+  const height = 600;
+  const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+  const svg = d3.select("#chart").append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const xScale = d3.scaleLinear().domain([-10, 10]).range([0, width - margin.left - margin.right]);
+  const yScale = d3.scaleLinear().domain([-10, 10]).range([height - margin.top - margin.bottom, 0]);
+
+  svg.append("g")
+          .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+          .call(d3.axisBottom(xScale));
+  svg.append("g")
+          .call(d3.axisLeft(yScale));
+
+  let points = [];
+
+  svg.on("click", function(event) {
+    const [x, y] = d3.pointer(event);
+    const xValue = xScale.invert(x - margin.left);
+    const yValue = yScale.invert(y - margin.top);
+    const cls = +document.getElementById("class").value;
+    points.push({ x: xValue, y: yValue, class: cls });
+    updateChart();
+  });
+
+  function generatePoints(cls) {
+    const meanX = +document.getElementById(`meanX${cls}`).value;
+    const meanY = +document.getElementById(`meanY${cls}`).value;
+    const covXX = +document.getElementById(`covXX${cls}`).value;
+    const covYY = +document.getElementById(`covYY${cls}`).value;
+    const numPoints = +document.getElementById(`numPoints${cls}`).value;
+
+    for (let i = 0; i < numPoints; i++) {
+      const x = d3.randomNormal(meanX, Math.sqrt(covXX))();
+      const y = d3.randomNormal(meanY, Math.sqrt(covYY))();
+      points.push({ x, y, class: cls });
+    }
+    updateChart();
+  }
+
+  function updateChart() {
+    svg.selectAll("circle").remove();
+    svg.selectAll("circle")
+            .data(points)
+            .enter()
+            .append("circle")
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y))
+            .attr("r", 5)
+            .attr("fill", d => d.class === 1 ? "blue" : "red");
+
+    calculateMeanCovariance();
+  }
+
+  function calculateMeanCovariance() {
+    const meanX = d3.mean(points, d => d.x);
+    const meanY = d3.mean(points, d => d.y);
+    const covXX = d3.variance(points, d => d.x);
+    const covYY = d3.variance(points, d => d.y);
+
+    document.getElementById("meanX").textContent = meanX.toFixed(2);
+    document.getElementById("meanY").textContent = meanY.toFixed(2);
+    document.getElementById("covXX").textContent = covXX.toFixed(2);
+    document.getElementById("covYY").textContent = covYY.toFixed(2);
+  }
+
+  function clearPoints() {
+    points = [];
+    updateChart();
+  }
+</script>
+</body>
+</html>

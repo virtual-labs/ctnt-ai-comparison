@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mean & Covariance Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  </head>
+<style>
+    body { /* ... (styles from previous response) ... */ }
+    .container { /* ... */ }
+    .plot-area { /* ... */ }
+    #plot { /* ... */ }
+    .controls { /* ... */ }
+    .input-group { /* ... */ }
+    label { /* ... */ }
+    input[type="text"], input[type="number"] { /* ... */ }
+    button { /* ... */ }
+    .output { /* ... */ }
+
+    /* Responsive adjustments (example) */
+    @media (max-width: 768px) {
+        .container {
+            flex-direction: column; /* Stack controls below plot on smaller screens */
+        }
+        .plot-area, .controls {
+            flex: 1; /* Equal height for plot and controls */
+        }
+    }
+</style>
+<body>
+<script>
+    // ... (Get DOM elements as before) ...
+
+    let data = [];
+    let svg; // Declare svg globally
+
+    // Function to parse mean and covariance input values
+    function parseInputValues(inputString) {
+        return inputString.split(",").map(Number);
+    }
+
+    // Function to generate random data based on mean and covariance
+    function generateRandomData(mean, covariance, count, className) {
+        const data = [];
+        const matrix = [
+            [covariance[0], covariance[1]],
+            [covariance[2], covariance[3]]
+        ];
+
+        const chol = choleskyDecomposition(matrix); // Perform Cholesky decomposition
+
+        for (let i = 0; i < count; i++) {
+            const u = [normalDist(), normalDist()]; // Generate two standard normal random variables
+            const x = [mean[0] + chol[0][0] * u[0] + chol[0][1] * u[1],
+                mean[1] + chol[1][0] * u[0] + chol[1][1] * u[1]];
+            data.push({ x: x[0], y: x[1], class: className });
+        }
+        return data;
+    }
+
+    // Cholesky Decomposition (for covariance matrix)
+    function choleskyDecomposition(matrix) {
+        const n = matrix.length;
+        const result = Array(n).fill(null).map(() => Array(n).fill(0));
+
+        for (let i = 0; i < n; i++) {
+            for (let k = 0; k <= i; k++) {
+                let sum = 0;
+                for (let j = 0; j < k; j++) {
+                    sum += result[i][j] * result[k][j];
+                }
+
+                if (k === i) {
+                    result[i][k] = Math.sqrt(matrix[i][i] - sum);
+                } else {
+                    result[i][k] = (matrix[i][k] - sum) / result[k][k];
+                }
+            }
+        }
+        return result;
+    }
+
+    // Box-Muller transform for generating standard normal distribution
+    function normalDist() {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random(); // Generate a number between 0 and 1
+        while (v === 0) v = Math.random();
+        let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        return num;
+    }
+
+    // Function to update the plot
+    function updatePlot() {
+        if (!svg) { // Initialize SVG if it doesn't exist
+            const margin = { top: 20, right: 20, bottom: 40, left: 60 }; // Adjust margins
+            const width = plot.node().clientWidth - margin.left - margin.right;
+            const height = plot.node().clientHeight - margin.top - margin.bottom;
+
+            svg = d3.select("#plot").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Add axes
+            svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")");
+            svg.append("g").attr("class", "y axis");
+        }
+
+        const x = d3.scaleLinear().domain(d3.extent(data, d => d.x)).range([0, plot.node().clientWidth - 100]);
+        const y = d3.scaleLinear().domain(d3.extent(data, d => d.y)).range([plot.node().clientHeight - 100, 0]);
+
+        svg.select(".x.axis").call(d3.axisBottom(x));
+        svg.select(".y.axis").call(d3.axisLeft(y));
+
+        // Join data to circles
+        const circles = svg.selectAll("circle")
+            .data(data);
+
+        // Enter selection (new circles)
+        circles.enter().append("circle")
+            .attr("r", 4)
+            .attr("fill", d => d.class === 1 ? "red" : "blue")
+            .attr("cx", d => x(d.x))
+            .attr("cy", d => y(d.y));
+
+        // Update selection (existing circles)
+        circles
+            .transition().duration(500) // Add a smooth transition
+            .attr("cx", d => x(d.x))
+            .attr("cy", d => y(d
+</script>
+<div class="container">
+    <div class="plot-area">
+        <div id="plot"></div>
+    </div>
+    <div class="controls">
+        <h2>Data Input</h2>
+
+        <div class="input-group">
+            <label for="class1-mean">Class 1 Mean (x, y):</label>
+            <input type="text" id="class1-mean" value="0, 0">
+        </div>
+        <div class="input-group">
+            <label for="class2-mean">Class 2 Mean (x, y):</label>
+            <input type="text" id="class2-mean" value="5, 5">
+        </div>
+        <div class="input-group">
+            <label for="class1-cov">Class 1 Covariance (xx, xy, yx, yy):</label>
+            <input type="text" id="class1-cov" value="1, 0.8, 0.8, 1">
+        </div>
+        <div class="input-group">
+            <label for="class2-cov">Class 2 Covariance (xx, xy, yx, yy):</label>
+            <input type="text" id="class2-cov" value="1, 0.2, 0.2, 1">
+        </div>
+
+        <div class="input-group">
+            <label for="class1-count">Class 1 Count:</label>
+            <input type="number" id="class1-count" value="100">
+        </div>
+        <div class="input-group">
+            <label for="class2-count">Class 2 Count:</label>
+            <input type="number" id="class2-count" value="100">
+        </div>
+
+        <button id="calculate">Calculate</button>
+        <button id="generate">Generate Random Data</button>
+
+        <div class="output">
+            <h3>Results</h3>
+            <p>Class 1 Mean: <span id="class1-mean-output"></span></p>
+            <p>Class 2 Mean: <span id="class2-mean-output"></span></p>
+            <p>Class 1 Covariance: <span id="class1-cov-output"></span></p>
+            <p>Class 2 Covariance: <span id="class2-cov-output"></span></p>
+        </div>
+    </div>
+</div>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+</body>
+</html>
